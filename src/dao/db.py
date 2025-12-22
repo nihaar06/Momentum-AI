@@ -23,11 +23,11 @@ sb:Client=create_client(url,key)
 
 class ops:
     ###GOALS###
-    def add_goal(self,description,metric,target,deadline=None):
+    def add_goal(self,description,metric,target,deadline=None,roadmap_id=None):
         try:
-            payload={'description':description,'metric':metric,'target_value':target,'deadline':deadline}
+            payload={'description':description,'metric':metric,'target_value':target,'deadline':deadline,'roadmap_id':roadmap_id}
             resp=sb.table('goals').insert(payload).execute()
-            return resp.data
+            return resp.data[0] if resp.data else None
         except Exception as e:
             raise ValueError(f"An error occured! {e}")
 
@@ -94,7 +94,7 @@ class ops:
         try:
             payload={'goal_id':goal_id,'description':description,'is_prioritized':priority}
             resp=sb.table('tasks').insert(payload).execute()
-            return resp.data
+            return resp.data[0] if resp.data else None
         except Exception as e:
             raise ValueError(f'Error Occured! Could not add the task:{e}')
         
@@ -171,3 +171,22 @@ class ops:
         except Exception as e:
             raise ValueError(f"Error! Could not insert the entry :{e}")
         
+    ###ROADMAPS###
+    def add_roadmap(self,user_id,description,level,daily_hours,duration_weeks):
+        payload={
+            'user_id':user_id,
+            'description':description,
+            'level':level,
+            'daily_hours':daily_hours,
+            'duration_weeks':duration_weeks
+        }
+        resp=sb.table('roadmaps').insert(payload).execute()
+        return resp.data[0] if resp.data else None
+    
+    def list_roadmaps(self,user_id):
+        try:
+            resp=sb.table("roadmaps").select("*").eq('user_id',user_id).execute()
+            return resp.data if resp.data else []
+        except Exception as e:
+            raise ValueError(f"Error! Could not retrieve data:{e}")
+    

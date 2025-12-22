@@ -63,3 +63,29 @@ class services:
     
     def list_tasks(self):
         return op.list_tasks()
+    
+    ###AI PERSISTANCE ORCHESTRATOR###
+    def persist_ai_roadmap(self,user_id,ai_output):
+        try:
+            roadmap=op.add_roadmap(user_id=user_id,
+                    description=ai_output['goal'],
+                    level=ai_output['level'],
+                    duration_weeks=ai_output['duration_weeks'],
+                    daily_hours=ai_output['daily_hours'],  
+                    )
+            if not roadmap:
+                raise ValueError("Roadmap creation failed.")
+            for week in ai_output['weeks']:
+                goal=op.add_goal(roadmap_id=roadmap['roadmap_id'],
+                                 description=week['weekly_goal'],
+                                 metric='tasks',
+                                 target=len(week['days']),
+                    )
+                if not goal:
+                    raise ValueError("Goals creation failed.")
+                for day in week['days']:
+                    for task in day['tasks']:
+                        op.add_task(goal['goal_id'],task,priority=False)
+            return roadmap
+        except Exception as e:
+            raise ValueError(f"Could not persist AI output:{e}")
