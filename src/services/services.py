@@ -2,24 +2,10 @@ from src.dao.db import ops
 import os
 import json
 from datetime import datetime
+from .ai_generator import generate_roadmap_ai
 
 op=ops()
 class services:
-    STATE_FILE_PATH=os.path.expanduser('~/.momentum_state.json')
-    def get_status(self):
-        if os.path.exists(self.STATE_FILE_PATH):
-            try:
-                with open(self.STATE_FILE_PATH,'r') as f:
-                    state_data=json.load(f)
-                tid=state_data['task_id']
-                status=op.get_task_status(tid)
-                return status
-            except (IOError, json.JSONDecodeError) as e:
-                print(f"Error: Could not read state file: {e}")
-                return None
-        else :
-            print("No timer is running")
-            return None
     ###GOALS###
     def add_goal(self,des,m,t,deadline):
         res=op.add_goal(des,m,t,deadline)
@@ -66,6 +52,9 @@ class services:
     
     ###AI PERSISTANCE ORCHESTRATOR###
     def persist_ai_roadmap(self,user_id,ai_output):
+        created_goal_ids=[]
+        created_task_ids=[]
+        roadmap=None
         try:
             roadmap=op.add_roadmap(user_id=user_id,
                     description=ai_output['goal'],
@@ -83,9 +72,29 @@ class services:
                     )
                 if not goal:
                     raise ValueError("Goals creation failed.")
+                created_goal_ids.append(goal['goal_id'])
                 for day in week['days']:
                     for task in day['tasks']:
-                        op.add_task(goal['goal_id'],task,priority=False)
+                        t=op.add_task(goal['goal_id'],task,priority=False)
+                        if not t:
+                            raise ValueError("Tasks creation failed.")
+                        created_task_ids.append(t['task_id'])
             return roadmap
         except Exception as e:
+            for t in created_task_ids:
+                op.delete_task(t)
+            for g in created_goal_ids:
+                op.delete_goal(g)
+            if roadmap:
+                op.delete_roadmap(roadmap['roadmap_id'])
             raise ValueError(f"Could not persist AI output:{e}")
+        #Added Transaction safety-Ensures that AI-generated roadmaps are either fully saved or completely rolled back if an error occurs.
+
+    def generate_and_persist_roadmap(self,user_id,input_data):
+        ai_output=generate_roadmap_ai(
+            goal=input_data['goal'],
+            duration_weeks=input_data['duration_weeks'],
+            daily_hours=input_data['daily_hours'],
+            level=input_data['level']
+        )
+        return self.persist_ai_roadmap(user_id,ai_output)

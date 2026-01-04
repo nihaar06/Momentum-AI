@@ -190,3 +190,9 @@ class ops:
         except Exception as e:
             raise ValueError(f"Error! Could not retrieve data:{e}")
     
+    def delete_roadmap(self,roadmap_id):
+        try:
+            resp=sb.table("roadmaps").delete().eq("roadmap_id",roadmap_id).execute()
+            return resp.data
+        except Exception as e:
+            raise ValueError(f"Could not delete roadmap:{e}")
