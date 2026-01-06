@@ -108,7 +108,7 @@ class services:
             for g in created_goal_ids:
                 op.delete_goal(g)
             if roadmap:
-                op.delete_roadmap(roadmap['roadmap_id'])
+                op.delete_roadmap(user_id,roadmap['roadmap_id'])
             raise ValueError(f"Could not persist AI output:{e}")
         #Added Transaction safety-Ensures that AI-generated roadmaps are either fully saved or completely rolled back if an error occurs.
 

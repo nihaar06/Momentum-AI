@@ -63,4 +63,4 @@ Generate a realistic and evenly distributed roadmap.
     try:
         return json.loads(content)
     except json.JSONDecodeError as e:
-        raise ValueError("AI returned invalid json:",e)
+        raise ValueError(f"AI returned invalid JSON: {e}")
