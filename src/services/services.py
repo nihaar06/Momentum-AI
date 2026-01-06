@@ -50,6 +50,28 @@ class services:
     def list_tasks(self):
         return op.list_tasks()
     
+    ###ROADMAPS###
+    def get_roadmap(self,user_id,roadmap_id):
+        return op.get_roadmap(user_id,roadmap_id)
+    
+    def get_active_roadmap(self,user_id):
+        return op.get_active_roadmap(user_id)
+    
+    def add_roadmap(self,user_id,description,level,daily_hours,duration_weeks):
+        return op.add_roadmap(user_id,description,level,daily_hours,duration_weeks)
+    
+    def get_goals_for_roadmap(self,roadmap_id):
+        return op.get_goals_for_roadmap(roadmap_id)
+    
+    def get_tasks_for_roadmap(self,roadmap_id):
+        return op.get_tasks_for_roadmap(roadmap_id)
+    
+    def delete_roadmap(self,user_id,roadmap_id):
+        return op.delete_roadmap(user_id,roadmap_id)
+    
+    def list_roadmaps(self,user_id):
+        return op.list_roadmaps(user_id)
+    
     ###AI PERSISTANCE ORCHESTRATOR###
     def persist_ai_roadmap(self,user_id,ai_output):
         created_goal_ids=[]

@@ -6,13 +6,13 @@ from datetime import datetime,timedelta,timezone
 import json
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from config import SUPABASE_URL, SUPABASE_KEY
+from config import SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
 load_dotenv()
 
 # Use environment variables if available, otherwise use config file
 url = os.getenv('SUPABASE_URL') or SUPABASE_URL
-key = os.getenv("SUPABASE_KEY") or SUPABASE_KEY
+key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or SUPABASE_SERVICE_ROLE_KEY
 
 if url == 'your_supabase_url_here' or key == 'your_supabase_anon_key_here':
     print("⚠️  WARNING: Please configure your Supabase credentials in config.py or set environment variables")
@@ -183,16 +183,105 @@ class ops:
         resp=sb.table('roadmaps').insert(payload).execute()
         return resp.data[0] if resp.data else None
     
-    def list_roadmaps(self,user_id):
+    def list_roadmaps(self, user_id):
         try:
-            resp=sb.table("roadmaps").select("*").eq('user_id',user_id).execute()
+            resp = sb.table("roadmaps").select("*").eq("user_id", user_id).execute()
             return resp.data if resp.data else []
         except Exception as e:
             raise ValueError(f"Error! Could not retrieve data:{e}")
-    
-    def delete_roadmap(self,roadmap_id):
+
+    def get_active_roadmap(self, user_id):
+        """
+        Returns the single active roadmap for a user (or None).
+        """
         try:
-            resp=sb.table("roadmaps").delete().eq("roadmap_id",roadmap_id).execute()
+            resp = (
+                sb.table("roadmaps")
+                .select("*")
+                .eq("is_active", True)
+                .eq("user_id", user_id)
+                .execute()
+            )
+            return resp.data[0] if resp.data else None
+        except Exception as e:
+            raise ValueError(f"Could not retrieve active roadmap:{e}")
+    
+    def mark_roadmap_inactive(self, user_id, roadmap_id):
+        try:
+            resp = (
+                sb.table("roadmaps")
+                .update({"is_active": False})
+                .eq("roadmap_id", roadmap_id)
+                .eq("user_id", user_id)
+                .execute()
+            )
+            return resp.data if resp.data else None
+        except Exception as e:
+            raise ValueError(f"Could not mark roadmap inactive:{e}")
+        
+    def delete_roadmap(self, user_id, roadmap_id):
+        try:
+            resp = (
+                sb.table("roadmaps")
+                .delete()
+                .eq("roadmap_id", roadmap_id)
+                .eq("user_id", user_id)
+                .execute()
+            )
             return resp.data
         except Exception as e:
             raise ValueError(f"Could not delete roadmap:{e}")
+        
+    def get_roadmap(self, user_id, roadmap_id):
+        try:
+            resp = (
+                sb.table("roadmaps")
+                .select("*")
+                .eq("roadmap_id", roadmap_id)
+                .eq("user_id", user_id)
+                .execute()
+            )
+            return resp.data[0] if resp.data else None
+        except Exception as e:
+            raise ValueError(f"Could not retrieve roadmap:{e}")
+
+    def get_goals_for_roadmap(self, roadmap_id):
+        try:
+            resp = sb.table("goals").select("*").eq("roadmap_id", roadmap_id).execute()
+            return resp.data if resp.data else None
+        except Exception as e:
+            raise ValueError(
+                f"Could not retrieve goals for the given roadmap_id:{e}"
+            )
+
+    def get_tasks_for_roadmap(self, roadmap_id):
+        """
+        Returns all tasks that belong to goals under the given roadmap.
+        Implemented without joins for better client compatibility.
+        """
+        try:
+            goals_resp = (
+                sb.table("goals")
+                .select("goal_id")
+                .eq("roadmap_id", roadmap_id)
+                .execute()
+            )
+            if not goals_resp.data:
+                return None
+
+            goal_ids = [g["goal_id"] for g in goals_resp.data]
+
+            tasks = []
+            for gid in goal_ids:
+                task_resp = (
+                    sb.table("tasks")
+                    .select("*")
+                    .eq("goal_id", gid)
+                    .execute()
+                )
+                if task_resp.data:
+                    tasks.extend(task_resp.data)
+
+            return tasks or None
+        except Exception as e:
+            raise ValueError(f"Could not retrieve tasks for roadmap:{e}")
