@@ -157,20 +157,6 @@ class ops:
         except Exception as e:
             raise ValueError(f"Error! Could not retrieve prioritized Tasks:{e}")
         
-    ###TIME_ENTRY###
-    def add_time_entry(self,task_id,start_time,end_time,dur):
-        try:
-            payload={
-                'task_id':task_id,
-                'start_time':start_time.isoformat(),
-                'end_time':end_time.isoformat(),
-                'duration_minutes':dur
-            }
-            res=sb.table('time_entries').insert(payload).execute()
-            return res.data if res.data else None
-        except Exception as e:
-            raise ValueError(f"Error! Could not insert the entry :{e}")
-        
     ###ROADMAPS###
     def add_roadmap(self,user_id,description,level,daily_hours,duration_weeks):
         payload={
@@ -219,18 +205,25 @@ class ops:
         except Exception as e:
             raise ValueError(f"Could not mark roadmap inactive:{e}")
         
-    def delete_roadmap(self, user_id, roadmap_id):
+    def delete_roadmap(self, roadmap_id: int, user_id: str):
         try:
+            # Ensure user owns the roadmap
             resp = (
-                sb.table("roadmaps")
+                sb
+                .table("roadmaps")
                 .delete()
                 .eq("roadmap_id", roadmap_id)
                 .eq("user_id", user_id)
                 .execute()
             )
-            return resp.data
+
+            if not resp.data:
+                raise ValueError("Roadmap not found or unauthorized")
+
         except Exception as e:
-            raise ValueError(f"Could not delete roadmap:{e}")
+            raise ValueError(f"Failed to delete roadmap: {e}")
+
+
         
     def get_roadmap(self, user_id, roadmap_id):
         try:
@@ -285,3 +278,66 @@ class ops:
             return tasks or None
         except Exception as e:
             raise ValueError(f"Could not retrieve tasks for roadmap:{e}")
+
+
+    ###ROADMAPS_TASKS###
+    def get_roadmap_tasks(self, roadmap_id: int):
+        try:
+            resp = (
+                sb.table("roadmap_tasks")
+                .select("*")
+                .eq("roadmap_id", roadmap_id)
+                .order("week_number,day_number")
+                .execute()
+            )
+            return resp.data or []
+        except Exception as e:
+            raise ValueError(f"Error retrieving roadmap tasks: {e}")
+
+    def get_roadmap_tasks_by_week(self, roadmap_id: int, week_number: int):
+        try:
+            resp = (
+                sb.table("roadmap_tasks")
+                .select("*")
+                .eq("roadmap_id", roadmap_id)
+                .eq("week_number", week_number)
+                .order("day_number")
+                .execute()
+            )
+            return resp.data or []
+        except Exception as e:
+            raise ValueError(f"Error retrieving roadmap tasks for week {week_number}: {e}")
+     
+    def add_roadmap_task(self, roadmap_id: int,week_number:int, day_number: int, task_text: str):
+        try:
+            resp = (
+                sb.table("roadmap_tasks")
+                .insert({
+                    "roadmap_id": roadmap_id,
+                    "week_number": week_number,
+                    "day_number": day_number,
+                    "task_text": task_text,
+                    "completed": False
+                })
+                .execute()
+            )
+            return resp.data[0] if resp.data else None
+        except Exception as e:
+            raise ValueError(f"Error inserting roadmap task: {e}")
+
+    def update_roadmap_task_status(self, task_id: str, completed: bool):
+        """
+        ✅ FIXED: Uses Supabase client correctly
+        """
+        try:
+            resp = (
+                sb.table("roadmap_tasks")
+                .update({"completed": completed})
+                .eq("id", task_id)
+                .execute()
+            )
+            return resp.data[0] if resp.data else None
+        except Exception as e:
+            raise ValueError(f"Error updating roadmap task status: {e}")
+        
+    

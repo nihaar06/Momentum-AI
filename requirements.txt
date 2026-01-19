@@ -1,7 +1,5 @@
 supabase
 python-dotenv
-streamlit
-pygetwindow
 pynput
 pyrect
 pandas 
