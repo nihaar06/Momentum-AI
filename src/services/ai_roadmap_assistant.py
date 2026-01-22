@@ -15,16 +15,22 @@ client = OpenAI(
 def validate_user_input(q: str) -> bool:
     return bool(q and len(q.strip()) >= 3)
 
-def build_context(roadmap,tasks):
-    return f"""
-    Roadmap goal: {roadmap['description']}
-    Level: {roadmap['level']}
-    Duration: {roadmap['duration_weeks']} weeks
-    Tasks:
-    - {"\n- ".join(t["task_text"] for t in tasks)}
-    """
+def build_context(roadmap, tasks):
+    if not tasks:
+        tasks_text = "No tasks found for the selected scope."
+    else:
+        tasks_text = "\n- ".join(t["task_text"] for t in tasks)
 
-def ai_assistant(user_id,roadmap_id, input_data):
+    return f"""
+Roadmap goal: {roadmap['description']}
+Level: {roadmap['level']}
+Duration: {roadmap['duration_weeks']} weeks
+
+Tasks:
+- {tasks_text}
+"""
+
+def ai_assistant(user_id,roadmap_id, input_data,week_number=None,day_number=None):
     roadmap = ss.get_roadmap(user_id,roadmap_id)
     if not roadmap:
         return "Selected roadmap not found."
@@ -33,7 +39,12 @@ def ai_assistant(user_id,roadmap_id, input_data):
             "I can help only with questions related to your roadmap, "
             "tasks, and learning progress."
         )
-    tasks = ss.get_roadmap_tasks(roadmap_id)
+    if week_number and day_number:
+        tasks=ss.get_roadmap_tasks_by_day(roadmap_id,week_number,day_number)
+    elif week_number:
+        tasks=ss.get_roadmap_tasks_by_week(roadmap_id,week_number)
+    else:
+        tasks = ss.get_roadmap_tasks(roadmap_id)
     context = build_context(roadmap,tasks)
     prompt = f"""
     You are an assistant for a productivity roadmap system.
@@ -45,6 +56,7 @@ def ai_assistant(user_id,roadmap_id, input_data):
     - Only answer questions related to this roadmap
     - Do not modify tasks or goals
     - Suggest learning resources if relevant
+    -Provide the direct links that are valid, if possible for the resources you suggest.
 
     User question:
     {input_data}
@@ -60,10 +72,12 @@ def ai_assistant(user_id,roadmap_id, input_data):
     return response.choices[0].message.content
 
 
-def ai_roadmap_assistant(user_id: str, roadmap_id: int, input_data: str) -> str:
+def ai_roadmap_assistant(user_id: str, roadmap_id: int, input_data: str,week_number:int|None=None,day_number:int|None=None) -> str:
     return ai_assistant(
         user_id=user_id,
         roadmap_id=roadmap_id,
-        input_data=input_data
+        input_data=input_data,
+        week_number=week_number,
+        day_number=day_number,
     )
 

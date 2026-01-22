@@ -87,6 +87,9 @@ class services:
     def get_roadmap_tasks_by_week(self,roadmap_id,week_number):
         return op.get_roadmap_tasks_by_week(roadmap_id,week_number)
     
+    def get_roadmap_tasks_by_day(self,roadmap_id,week_number,day_number):
+        return op.get_roadmap_tasks_by_day(roadmap_id,week_number,day_number)
+    
     ###AI PERSISTANCE ORCHESTRATOR###
     def persist_ai_roadmap(self, user_id, ai_output):
         roadmap = None

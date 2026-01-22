@@ -307,6 +307,13 @@ class ops:
             return resp.data or []
         except Exception as e:
             raise ValueError(f"Error retrieving roadmap tasks for week {week_number}: {e}")
+        
+    def get_roadmap_tasks_by_day(self, roadmap_id: int, week_number: int, day_number: int):
+        try:
+            resp=sb.table("roadmap_tasks").select("*").eq("roadmap_id",roadmap_id).eq("week_number",week_number).eq("day_number",day_number).order("day_number").execute()
+            return resp.data or []
+        except Exception as e:
+            raise ValueError(f"Error retrieving roadmap tasks for week {week_number} day {day_number}:{e}")
      
     def add_roadmap_task(self, roadmap_id: int,week_number:int, day_number: int, task_text: str):
         try:
@@ -326,13 +333,16 @@ class ops:
             raise ValueError(f"Error inserting roadmap task: {e}")
 
     def update_roadmap_task_status(self, task_id: str, completed: bool):
-        """
-        ✅ FIXED: Uses Supabase client correctly
-        """
         try:
+            payload = {"completed": completed}
+            if completed:
+                payload["completed_at"] = datetime.now(timezone.utc).isoformat()
+            else:
+                payload["completed_at"] = None
+    
             resp = (
                 sb.table("roadmap_tasks")
-                .update({"completed": completed})
+                .update(payload)
                 .eq("id", task_id)
                 .execute()
             )

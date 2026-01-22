@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import os
 
 from src.services import ai_roadmap_assistant
 from src.services.services import services
@@ -8,12 +9,18 @@ from src.services.services import services
 app=FastAPI()
 ss=services()
 
+# ---- CORS CONFIG (CRITICAL) ----
+origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
-    allow_methods=['*'],
-    allow_headers=['*']
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+
 
 class GenerateRoadmapRequest(BaseModel):
     user_id:str
@@ -120,8 +127,14 @@ class AssistantRequest(BaseModel):
     user_id:str
     roadmap_id:int
     input_data:str  
+    week_number:int|None
+    day_number:int|None
 
 @app.post('/ask-assistant')
 def ask_assistant(req:AssistantRequest):
-    resp=ai_roadmap_assistant(req.user_id,req.roadmap_id,req.input_data)
+    resp=ai_roadmap_assistant(req.user_id,req.roadmap_id,req.input_data,req.week_number,req.day_number)
     return {'response':resp}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
