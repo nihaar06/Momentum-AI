@@ -278,6 +278,54 @@ class ops:
             return tasks or None
         except Exception as e:
             raise ValueError(f"Could not retrieve tasks for roadmap:{e}")
+        
+    def get_roadmap_weeks(self, roadmap_id: int):
+        res = (
+            sb
+            .from_("roadmap_tasks")
+            .select(
+                "week_number, weekly_goal, completed"
+            )
+            .eq("roadmap_id", roadmap_id)
+            .execute()
+        )
+
+        rows = res.data or []
+        weeks = {}
+
+        for r in rows:
+            w = r["week_number"]
+            if w not in weeks:
+                weeks[w] = {
+                    "week_number": w,
+                    "weekly_goal": r["weekly_goal"],
+                    "total_tasks": 0,
+                    "completed_tasks": 0,
+                }
+
+            weeks[w]["total_tasks"] += 1
+            if r["completed"]:
+                weeks[w]["completed_tasks"] += 1
+
+        result = []
+        for w in sorted(weeks.keys()):
+            data = weeks[w]
+            progress = (
+                int((data["completed_tasks"] / data["total_tasks"]) * 100)
+                if data["total_tasks"] > 0
+                else 0
+            )
+
+            result.append({
+                "week_number": w,
+                "weekly_goal": data["weekly_goal"],
+                "total_tasks": data["total_tasks"],
+                "completed_tasks": data["completed_tasks"],
+                "progress": progress,
+            })
+
+        return result
+
 
 
     ###ROADMAPS_TASKS###
@@ -315,13 +363,14 @@ class ops:
         except Exception as e:
             raise ValueError(f"Error retrieving roadmap tasks for week {week_number} day {day_number}:{e}")
      
-    def add_roadmap_task(self, roadmap_id: int,week_number:int, day_number: int, task_text: str):
+    def add_roadmap_task(self, roadmap_id: int,week_number:int,weekly_goal:str, day_number: int, task_text: str):
         try:
             resp = (
                 sb.table("roadmap_tasks")
                 .insert({
                     "roadmap_id": roadmap_id,
                     "week_number": week_number,
+                    "weekly_goal":weekly_goal,
                     "day_number": day_number,
                     "task_text": task_text,
                     "completed": False

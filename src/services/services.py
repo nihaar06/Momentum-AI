@@ -69,6 +69,8 @@ class services:
     def delete_roadmap(self, roadmap_id: int, user_id: str):
         return op.delete_roadmap(roadmap_id, user_id)
 
+    def get_roadmap_weeks(self,roadmap_id):
+        return op.get_roadmap_weeks(roadmap_id)
     
     def list_roadmaps(self,user_id):
         return op.list_roadmaps(user_id)
@@ -78,8 +80,8 @@ class services:
     def get_roadmap_tasks(self,roadmap_id):
         return op.get_roadmap_tasks(roadmap_id)
     
-    def add_roadmap_task(self,user_id,roadmap_id,day_number,task_description):
-        return op.add_roadmap_task(user_id,roadmap_id,day_number,task_description)
+    def add_roadmap_task(self,user_id,roadmap_id,weekly_goal,day_number,task_description):
+        return op.add_roadmap_task(user_id,roadmap_id,weekly_goal,day_number,task_description)
     
     def update_roadmap_task_status(self,task_id,completed):
         return op.update_roadmap_task_status(task_id,completed)
@@ -113,6 +115,7 @@ class services:
                         op.add_roadmap_task(
                             roadmap_id,
                             week["week_number"],
+                            week['weekly_goal'],
                             day['day_number'],
                             task  
                         )
@@ -168,6 +171,7 @@ class services:
                         op.add_roadmap_task(
                             roadmap_id=roadmap_id,
                             week_number=week_number,
+                            weekly_goal=week['weekly_goal'],
                             day_number=day_number,
                             task_text=task_text,
                         )

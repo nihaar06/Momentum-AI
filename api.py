@@ -53,41 +53,7 @@ def delete_roadmap(roadmap_id: int, user_id: str):
 
 @app.get("/roadmap/{roadmap_id}/weeks")
 def roadmap_weeks(roadmap_id: int):
-    tasks = ss.get_roadmap_tasks(roadmap_id)
-
-    weeks = {}
-
-    for t in tasks:
-        w = t["week_number"]
-
-        if w not in weeks:
-            weeks[w] = {
-                "week_number": w,
-                "total_tasks": 0,
-                "completed_tasks": 0,
-            }
-
-        weeks[w]["total_tasks"] += 1
-        if t["completed"]:
-            weeks[w]["completed_tasks"] += 1
-
-    result = []
-    for w in sorted(weeks.keys()):
-        data = weeks[w]
-        progress = (
-            round((data["completed_tasks"] / data["total_tasks"]) * 100)
-            if data["total_tasks"] > 0
-            else 0
-        )
-
-        result.append({
-            "week_number": w,
-            "total_tasks": data["total_tasks"],
-            "completed_tasks": data["completed_tasks"],
-            "progress": progress,
-        })
-
-    return result
+    return ss.get_roadmap_weeks(roadmap_id)
 
 @app.get("/roadmap/{roadmap_id}/week/{week_number}")
 def roadmap_week_detail(roadmap_id: int, week_number: int):
