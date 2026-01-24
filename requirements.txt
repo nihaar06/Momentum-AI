@@ -1,6 +1,6 @@
+fastapi
+uvicorn
 supabase
 python-dotenv
-pynput
-pyrect
-pandas 
-plotly
+openai
+httpx

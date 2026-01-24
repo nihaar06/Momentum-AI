@@ -363,7 +363,7 @@ class ops:
         except Exception as e:
             raise ValueError(f"Error retrieving roadmap tasks for week {week_number} day {day_number}:{e}")
      
-    def add_roadmap_task(self, roadmap_id: int,week_number:int,weekly_goal:str, day_number: int, task_text: str):
+    def add_roadmap_task(self, roadmap_id: int,week_number:int,weekly_goal:str, day_number: int, task_text: str,effort:str,category:str):
         try:
             resp = (
                 sb.table("roadmap_tasks")
@@ -373,6 +373,8 @@ class ops:
                     "weekly_goal":weekly_goal,
                     "day_number": day_number,
                     "task_text": task_text,
+                    "effort":effort,
+                    "category":category,
                     "completed": False
                 })
                 .execute()
@@ -381,22 +383,31 @@ class ops:
         except Exception as e:
             raise ValueError(f"Error inserting roadmap task: {e}")
 
+
+
     def update_roadmap_task_status(self, task_id: str, completed: bool):
-        try:
-            payload = {"completed": completed}
-            if completed:
-                payload["completed_at"] = datetime.now(timezone.utc).isoformat()
-            else:
-                payload["completed_at"] = None
+        payload = {
+            "completed": completed,
+        }
     
-            resp = (
-                sb.table("roadmap_tasks")
-                .update(payload)
-                .eq("id", task_id)
-                .execute()
-            )
-            return resp.data[0] if resp.data else None
-        except Exception as e:
-            raise ValueError(f"Error updating roadmap task status: {e}")
+        if completed:
+            payload["completed_at"] = datetime.utcnow().isoformat()
+        else:
+            payload["completed_at"] = None
+    
+        res = (
+            sb
+            .table("roadmap_tasks")
+            .update(payload)
+            .eq("id", task_id)
+            .execute()
+        )
+    
+        if not res.data:
+            raise ValueError("Task update failed")
+    
+        return res.data
+
+
         
     

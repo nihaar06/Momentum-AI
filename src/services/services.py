@@ -80,8 +80,8 @@ class services:
     def get_roadmap_tasks(self,roadmap_id):
         return op.get_roadmap_tasks(roadmap_id)
     
-    def add_roadmap_task(self,user_id,roadmap_id,weekly_goal,day_number,task_description):
-        return op.add_roadmap_task(user_id,roadmap_id,weekly_goal,day_number,task_description)
+    def add_roadmap_task(self,user_id,roadmap_id,weekly_goal,day_number,task_description,effort,category):
+        return op.add_roadmap_task(user_id,roadmap_id,weekly_goal,day_number,task_description,effort,category)
     
     def update_roadmap_task_status(self,task_id,completed):
         return op.update_roadmap_task_status(task_id,completed)
@@ -117,7 +117,9 @@ class services:
                             week["week_number"],
                             week['weekly_goal'],
                             day['day_number'],
-                            task  
+                            task ['text'] ,
+                            task['effort'],
+                            task['category']
                         )
 
             return roadmap
@@ -167,13 +169,15 @@ class services:
                 week_number = week["week_number"]
                 for day in week["days"]:
                     day_number = day["day_number"]
-                    for task_text in day["tasks"]:
+                    for task in day["tasks"]:
                         op.add_roadmap_task(
                             roadmap_id=roadmap_id,
                             week_number=week_number,
                             weekly_goal=week['weekly_goal'],
                             day_number=day_number,
-                            task_text=task_text,
+                            task_text=task['text'],
+                            effort=task['effort'],
+                            category=task['category']
                         )
 
             return roadmap
