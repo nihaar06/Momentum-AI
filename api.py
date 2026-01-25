@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Updated imports to use absolute paths for better reliability in production
 from src.services.ai_roadmap_assistant import ai_roadmap_assistant
