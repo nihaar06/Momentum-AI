@@ -6,22 +6,24 @@ import os
 from src.services import ai_roadmap_assistant
 from src.services.services import services
 
-app=FastAPI()
-ss=services()
+# Initialize FastAPI app
+app = FastAPI()
 
-# ---- CORS CONFIG (CRITICAL) ----
-origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
-
+# ---- CORS CONFIG (CRITICAL) - MUST BE FIRST ----
+# Add CORS middleware BEFORE any other initialization
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
         "https://momentum-ai-frontend.vercel.app",
-    ],  
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Initialize services AFTER middleware is registered
+ss = services()
 
 
 
