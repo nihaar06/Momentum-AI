@@ -6,11 +6,15 @@ A FastAPI-powered backend for AI-driven learning roadmap generation and task man
 
 ## Production API Base URL
 
-```
-https://momentum-ai-production.railway.app
+> **Hosted on Render**
+>
+> Replace the placeholder below with your actual Render service URL (from the Render dashboard).
+
+```text
+https://momentum-ai-fb1g.onrender.com
 ```
 
-> Deployed on Railway. Frontend (Next.js) consumes all endpoints at this URL.
+The frontend (or any API client) should send all requests to this base URL in production.
 
 ---
 
@@ -25,6 +29,16 @@ https://momentum-ai-production.railway.app
 - **Environment Management**: python-dotenv
 
 ---
+
+## Architecture Overview
+
+Frontend (Next.js on Vercel)
+        ↓
+FastAPI Backend (Render)
+        ↓
+Supabase (Postgres)
+        ↓
+OpenRouter (LLM)
 
 ## Core Responsibilities
 
@@ -199,34 +213,49 @@ cp .env.example .env
 
 5. Run the development server:
 ```bash
-uvicorn api:app --reload --host 0.0.0.0 --port 8000
+uvicorn api:app --reload --host 0.0.0.0 --port 10000
 ```
 
-The API will be available at `http://localhost:8000`.
+The API will be available at `http://localhost:10000`.
 
 ### API Documentation
 
 FastAPI automatically generates interactive API documentation:
-- **Swagger UI**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
+- **Swagger UI**: `http://localhost:10000/docs`
+- **ReDoc**: `http://localhost:10000/redoc`
 
 ---
 
 ## Deployment Notes
 
-### Railway Deployment
+### Render Deployment
 
-1. **CORS Configuration**: The backend is configured to accept requests from:
-   - `http://localhost:3000` (local frontend development)
-   - `https://momentum-ai-frontend.vercel.app` (production frontend)
+1. **CORS Configuration**  
+   The backend should be configured to accept requests from:
+   - `http://localhost:3000` (local frontend development, if you have one)
+   - Your production frontend URL (for example: `https://momentum-ai-frontend.vercel.app`)
 
-   Update `api.py` if deploying a different frontend URL.
+   Update the CORS settings in your FastAPI app (e.g. in `api.py`) if you change frontend origins.
 
-2. **Database Connection**: Supabase credentials are sourced from environment variables on Railway. Ensure all required env vars are set in your Railway project settings.
+2. **Environment Variables on Render**  
+   In the Render dashboard, open your backend service and configure the following env vars:
+   - `SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `OPENAI_API_KEY`
 
-3. **Production Server**: Railway automatically uses Gunicorn to run the application in production. The server binds to port `8000` by default.
+   These must match the values you use locally in `.env`.
 
-4. **Logs**: Monitor Railway logs for any runtime errors or startup issues.
+3. **Start Command**  
+   Configure the Render service start command, for example:
+
+   ```bash
+   uvicorn api:app --host 0.0.0.0 --port 10000
+   ```
+
+   Render will automatically bind the correct port via the `$PORT` environment variable; if you prefer, you can use `--port $PORT` instead of a hardcoded value.
+
+4. **Logs & Monitoring**  
+   Use the Render dashboard **Logs** tab to monitor startup, request handling, and any runtime errors.
 
 ---
 
@@ -259,10 +288,10 @@ This ensures the database never contains incomplete roadmaps.
 
 ## Health Check
 
-Before integrating with the frontend, verify the backend is operational:
+Before integrating with the frontend, verify the backend is operational on Render:
 
 ```bash
-curl https://momentum-ai-production.railway.app/health
+curl https://momentum-ai-fb1g.onrender.com/health
 ```
 
 Expected response:
@@ -273,6 +302,11 @@ Expected response:
 ```
 
 ---
+
+## Live Demo
+
+Frontend: https://momentum-ai-frontend.vercel.app
+Backend: https://momentum-ai-fb1g.onrender.com/docs
 
 ## Support & Troubleshooting
 
