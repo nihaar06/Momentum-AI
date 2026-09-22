@@ -10,15 +10,20 @@ from config import SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
 load_dotenv()
 
-# Use environment variables if available, otherwise use config file
+# Use environment variables if available, otherwise use config file.
+# Keep compatibility with the older secret name used in CI: SUPABASE_KEY.
 url = os.getenv('SUPABASE_URL') or SUPABASE_URL
-key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or SUPABASE_SERVICE_ROLE_KEY
+key = (
+    os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+    or os.getenv('SUPABASE_KEY')
+    or SUPABASE_SERVICE_ROLE_KEY
+)
 
-if url == 'your_supabase_url_here' or key == 'your_supabase_anon_key_here':
+if url == 'your_supabase_url_here' or key in {'your_supabase_anon_key_here', 'your_supabase_service_role_key_here'}:
     print("⚠️  WARNING: Please configure your Supabase credentials in config.py or set environment variables")
-    print("   SUPABASE_URL and SUPABASE_KEY")
+    print("   SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY")
 
-sb:Client=create_client(url,key)
+sb:Client = create_client(url, key)
 
 
 class ops:
@@ -386,15 +391,15 @@ class ops:
 
 
     def update_roadmap_task_status(self, task_id: str, completed: bool):
-        payload = {
+        payload: dict[str, bool | str | None] = {
             "completed": completed,
         }
-    
+
         if completed:
             payload["completed_at"] = datetime.utcnow().isoformat()
         else:
             payload["completed_at"] = None
-    
+
         res = (
             sb
             .table("roadmap_tasks")

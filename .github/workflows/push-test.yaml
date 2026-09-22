@@ -20,10 +20,10 @@ jobs:
           pip install -r requirements.txt
       - name: Run tests
         env:
-          SUPABASE_URL: ${{secrets.SUPABASE_URL}}
-          SUPABASE_KEY: ${{secrets.SUPABASE_KEY}}
-          OPEN_AI_API_KEY: ${{secrets.OPENAI_API_KEY}}
-        run: pytest
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python -m pytest -q
 
       - name: Check application
         run: |

@@ -5,8 +5,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def get_openai_api_key():
+    return os.getenv("OPENAI_API_KEY") or os.getenv("OPEN_AI_API_KEY") or ""
+
+
 client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY"),
+    api_key=get_openai_api_key(),
     base_url="https://openrouter.ai/api/v1",
 )
 
@@ -79,7 +84,11 @@ IMPORTANT:
         temperature=0.4,
     )
 
-    raw = response.choices[0].message.content.strip()
+    content = response.choices[0].message.content
+    if content is None:
+        raise ValueError("AI output is empty.")
+
+    raw = content.strip()
 
     try:
         return json.loads(raw)

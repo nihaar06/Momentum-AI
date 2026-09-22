@@ -1,4 +1,4 @@
-name: test workflow
+name: pr test workflow
 on:
   pull_request:
     branches:
@@ -21,7 +21,11 @@ jobs:
           pip install -r requirements.txt
       
       - name : Run tests
-        run: pytest
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python -m pytest -q
       
       - name : Check application
         run: |
