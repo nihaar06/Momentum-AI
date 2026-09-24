@@ -1,0 +1,18 @@
+name: Deploy Backend
+
+on:
+  workflow_run:
+    workflows: ["push test workflow"]
+    types:
+      - completed
+    branches:
+      - main
+jobs:
+  deploy:
+    if: ${{github.event.workflow.run.conclusion == 'success'}}
+    runs-on : ubuntu-latest
+
+    steps:
+      - name: Deploy to Render
+        run: |
+          curl -X POST "${{secrets.RENDER_DEPLOY_HOOK_URL}}"
